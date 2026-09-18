@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#E4412B">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Pizzeria</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/favicon-32.png">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tomato:#E4412B; --basil:#2F8F4E; --dough:#F3D29B; --crust:#D9A05B;
+  --wood:#9A6236; --tile:#D6EEF3; --tile2:#C2E4ED; --ink:#3A2418; --cheese:#F7D35C;
+  --pz:min(52vh, 40vw, 480px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  font-family:'Fredoka', ui-rounded, system-ui, sans-serif; color:var(--ink);
+  background-color:var(--tile);
+  background-image:
+    linear-gradient(45deg,var(--tile2) 25%,transparent 25%,transparent 75%,var(--tile2) 75%),
+    linear-gradient(45deg,var(--tile2) 25%,transparent 25%,transparent 75%,var(--tile2) 75%);
+  background-size:64px 64px; background-position:0 0,32px 32px;
+  user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+#app{height:100dvh;display:flex;flex-direction:column}
+
+/* Markise */
+header{position:relative;height:74px;flex:none;z-index:5}
+.awning{position:absolute;inset:0 0 auto 0;height:50px;
+  background:repeating-linear-gradient(90deg,var(--tomato) 0 60px,#fff 60px 120px)}
+.awning::after{content:'';position:absolute;left:0;right:0;top:100%;height:20px;
+  background:
+    radial-gradient(ellipse 30px 20px at 30px 0,var(--tomato) 97%,transparent 100%),
+    radial-gradient(ellipse 30px 20px at 90px 0,#fff 97%,transparent 100%);
+  background-size:120px 20px;filter:drop-shadow(0 4px 2px rgba(0,0,0,.12))}
+.sign{position:absolute;left:50%;top:6px;transform:translateX(-50%);
+  background:var(--basil);color:#fff;border:4px solid #fff;border-radius:16px;
+  padding:4px 22px;font-weight:700;font-size:clamp(20px,3vw,30px);white-space:nowrap;
+  box-shadow:0 5px 0 rgba(0,0,0,.18)}
+.stats{position:absolute;right:12px;top:8px;display:flex;gap:8px}
+.chip{background:#fff;border-radius:999px;padding:3px 14px;font-weight:700;font-size:22px;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);border:none;font-family:inherit;color:inherit;display:flex;align-items:center;gap:6px}
+.chip.bump{animation:bump .4s}
+@keyframes bump{50%{transform:scale(1.3)}}
+
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px;padding:8px 20px 0}
+
+/* Kundschaft */
+.shop{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-height:0}
+.bubble{position:relative;background:#fff;border:4px solid var(--ink);border-radius:28px;
+  padding:14px 54px 14px 18px;min-height:80px;min-width:180px;max-width:100%;margin-bottom:22px;
+  opacity:0;transform:scale(.5);transform-origin:50% 100%;transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.bubble.show{opacity:1;transform:scale(1)}
+.bubble::after{content:'';position:absolute;width:22px;height:22px;background:#fff;
+  border-right:4px solid var(--ink);border-bottom:4px solid var(--ink);
+  bottom:-15px;left:50%;transform:translateX(-50%) rotate(45deg)}
+#order{display:flex;flex-direction:column;gap:8px}
+.orow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.oi{width:clamp(34px,6vh,54px);height:clamp(34px,6vh,54px)}
+.oi svg,.ic svg,.piece svg{width:100%;height:100%;display:block}
+.say{font-size:clamp(20px,3vh,28px);font-weight:600;line-height:1.25}
+#speak{position:absolute;right:8px;top:8px;width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--tile);font-size:20px;cursor:pointer}
+.customer{font-size:clamp(100px,25vh,230px);line-height:1;position:relative;z-index:1;margin-bottom:-.12em;
+  transform:translateX(-140vw);transition:transform .8s cubic-bezier(.2,.9,.3,1.1);cursor:pointer}
+.customer.in{transform:translateX(0)}
+.customer.leave{transform:translateX(-140vw);transition-timing-function:ease-in}
+.customer.happy{animation:hop .45s 3}
+@keyframes hop{50%{translate:0 -16%}}
+.counter{width:100%;height:clamp(40px,11vh,90px);position:relative;z-index:2;
+  background:linear-gradient(#B87842,#8E5A2F);border-top:12px solid #C98B52;border-radius:16px 16px 0 0}
+
+/* Pizza */
+.station{position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+.board{width:calc(var(--pz)*1.13);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:radial-gradient(circle at 40% 35%,#D9A46C,#B97E47 70%,#A06633);
+  box-shadow:0 10px 0 #7E4E27,0 16px 30px rgba(0,0,0,.2);touch-action:none}
+.pizza{width:var(--pz);aspect-ratio:1;border-radius:50%;position:relative;touch-action:none;cursor:crosshair;
+  background:radial-gradient(circle,var(--dough) 0 79%,var(--crust) 86%,#C98A45 100%);
+  transition:transform .25s cubic-bezier(.3,1.6,.5,1),box-shadow .4s,background .6s}
+.pizza.fly{transition:transform .7s cubic-bezier(.5,0,.7,.4),opacity .7s;transform:translate(var(--fx),var(--fy)) scale(.3);opacity:0}
+/* Teigball: startet klein und wird per Swipe ausgerollt */
+.pizza.ball{transform:scale(.24);cursor:grab}
+.pizza.ball::after{content:'';position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 32% 26%,#FBE3B8,#EBC48C 55%,#C08747 100%);
+  box-shadow:inset -6px -10px 18px rgba(122,74,32,.45)}
+.sauce,.cheese{position:absolute;transform:scale(0);transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.sauce{inset:9%;border-radius:48% 52% 50% 47% / 50% 47% 53% 50%;
+  background:radial-gradient(circle at 40% 35%,#F0624A,#C9321F 78%)}
+.cheese{inset:13%;opacity:.95;border-radius:52% 46% 49% 53% / 47% 53% 48% 52%;
+  background:
+    radial-gradient(circle at 30% 30%,#FFE890 0 11%,transparent 12%),
+    radial-gradient(circle at 66% 38%,#FFE890 0 13%,transparent 14%),
+    radial-gradient(circle at 44% 70%,#FFE890 0 12%,transparent 13%),
+    radial-gradient(circle at 76% 72%,#FFE890 0 9%,transparent 10%),
+    var(--cheese)}
+.sauce.on,.cheese.on{transform:scale(1)}
+.pizza.baked{background:radial-gradient(circle,var(--dough) 0 79%,#B7722F 86%,#8C4F1C 100%)}
+.pizza.baked .cheese{background:
+    radial-gradient(circle at 38% 55%,#D48A2A 0 4%,transparent 5%),
+    radial-gradient(circle at 62% 28%,#D48A2A 0 3%,transparent 4%),
+    radial-gradient(circle at 70% 60%,#D48A2A 0 3.5%,transparent 4.5%),
+    radial-gradient(circle at 28% 42%,#D48A2A 0 3%,transparent 4%),
+    radial-gradient(circle at 30% 30%,#FFDA6A 0 11%,transparent 12%),
+    radial-gradient(circle at 66% 38%,#FFDA6A 0 13%,transparent 14%),
+    #F0BF3E}
+.pizza.baking{animation:wobble .35s infinite;box-shadow:0 0 60px 24px rgba(255,140,0,.75)}
+.pizza.baked.dark{filter:brightness(.84) saturate(1.1)}
+@keyframes wobble{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg) scale(1.02)}}
+#tops{position:absolute;inset:0}
+#tops.fade .piece{transition:opacity .5s;opacity:0}
+/* Male-Fläche für Soße */
+#paint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:opacity .6s}
+/* Nudelholz folgt dem Finger beim Ausrollen */
+#pin{position:fixed;width:calc(var(--pz)*.62);height:calc(var(--pz)*.13);left:0;top:0;z-index:45;
+  border-radius:999px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) rotate(0deg);
+  background:linear-gradient(90deg,#7E4E27 0 11%,#D9A05B 11% 30%,#C08747 30% 34%,#D9A05B 34% 66%,#C08747 66% 70%,#D9A05B 70% 89%,#7E4E27 89% 100%);
+  box-shadow:0 6px 10px rgba(0,0,0,.28);transition:opacity .15s}
+#pin.on{opacity:1}
+.piece{position:absolute;width:calc(var(--pz)*.13);aspect-ratio:1;pointer-events:none;
+  transform:translate(-50%,-50%) rotate(var(--r));animation:pop .28s cubic-bezier(.3,1.6,.5,1)}
+.piece.small{width:calc(var(--pz)*.075)}
+@keyframes pop{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(0)}}
+#flames{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);font-size:clamp(40px,8vh,70px);
+  opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:-.1em}
+#flames.on{opacity:1}
+#flames span{display:inline-block;animation:flick .3s infinite alternate}
+#flames span:nth-child(2){animation-delay:.1s}
+#flames span:nth-child(3){animation-delay:.2s}
+@keyframes flick{to{transform:scaleY(1.2) translateY(-4px)}}
+
+/* Ofen-Timing: Zeiger über die Backleiste */
+#ovenbar{position:absolute;bottom:3%;left:50%;transform:translateX(-50%);
+  width:calc(var(--pz)*1.02);height:clamp(30px,5vh,44px);border-radius:999px;
+  border:4px solid var(--ink);z-index:8;display:none;box-shadow:0 5px 0 rgba(0,0,0,.22);cursor:pointer;
+  background:linear-gradient(90deg,#FFF3D6 0 36%,#5CC27A 36% 64%,#A55B22 76%,#6B3A12 100%)}
+#ovenbar.on{display:block}
+#needle{position:absolute;top:-7px;bottom:-7px;width:14px;border-radius:8px;left:0;
+  transform:translateX(-50%);background:#fff;border:3px solid var(--ink);box-shadow:0 2px 4px rgba(0,0,0,.3)}
+
+/* Regal mit Knöpfen */
+.tray{flex:none;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;
+  padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(#A56A3B,#83532C);border-top:8px solid #C98B52;position:relative;z-index:3}
+.sep{width:4px;align-self:stretch;margin:6px 4px;border-radius:2px;background:rgba(0,0,0,.18)}
+.tbtn{width:clamp(72px,8.3vw,104px);aspect-ratio:1;border-radius:22px;border:none;background:#FFF8EC;
+  box-shadow:0 6px 0 #5E3A1C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:inherit;color:var(--ink);cursor:pointer;padding:6px;transition:transform .12s,opacity .2s,background .2s}
+.tbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #5E3A1C}
+.tbtn:focus-visible{outline:4px dashed #fff;outline-offset:3px}
+.tbtn .ic{width:54%;height:54%;display:grid;place-items:center;font-size:clamp(30px,4vw,44px);line-height:1}
+.tbtn .lb{font-size:clamp(13px,1.5vw,17px);font-weight:600}
+.tbtn.sel{background:#FFEFA8;outline:5px solid var(--basil);transform:translateY(-6px)}
+.tbtn.dis{opacity:.4}
+.tbtn.done{background:#D8F0D4}
+.tbtn.pulse{animation:pulse 1.1s infinite}
+@keyframes pulse{50%{box-shadow:0 6px 0 #5E3A1C,0 0 0 9px #FFD640;transform:scale(1.06)}}
+.tbtn.wig{animation:wig .4s}
+@keyframes wig{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.tbtn.new{animation:pop2 .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop2{0%{transform:scale(0)}}
+.tbtn.hide{display:none}
+.tbtn.act{background:#FFE2C4}
+#b_serve.act{background:#D8F0D4}
+
+/* Effekte */
+.fx{position:fixed;font-size:44px;pointer-events:none;z-index:50;animation:rise 1.2s ease-out forwards}
+@keyframes rise{to{transform:translate(var(--dx),var(--dy)) scale(1.4);opacity:0}}
+#toast{position:fixed;left:50%;top:90px;transform:translate(-50%,-30px);opacity:0;z-index:40;
+  background:#fff;border:4px solid var(--basil);border-radius:22px;padding:10px 22px;
+  display:flex;align-items:center;gap:12px;font-size:26px;font-weight:700;transition:.35s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast .ti{width:48px;height:48px}
+
+/* Startbildschirm */
+#start{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+  background:rgba(214,238,243,.93)}
+#start .big{font-size:min(30vh,200px);line-height:1;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#start h1{margin:0;font-size:clamp(34px,6vw,64px);color:var(--tomato);font-weight:700}
+#go{font-family:inherit;font-size:clamp(26px,4vw,40px);font-weight:700;color:#fff;background:var(--basil);
+  border:none;border-radius:999px;padding:18px 44px;box-shadow:0 8px 0 #1F6A37;cursor:pointer}
+#go:active{transform:translateY(5px);box-shadow:0 3px 0 #1F6A37}
+
+@media (orientation:portrait){
+  :root{--pz:min(74vw,40vh)}
+  main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .shop{flex-direction:row;align-items:center;justify-content:center;gap:24px;padding-top:6px}
+  .customer{font-size:min(14vh,24vw);margin:0}
+  .bubble{margin:0}
+  .bubble::after{bottom:auto;left:auto;top:50%;right:-15px;transform:translateY(-50%) rotate(-45deg)}
+  .counter{display:none}
+  .tbtn{width:clamp(72px,11vw,110px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="awning"></div>
+    <div class="sign">Pizzeria</div>
+    <div class="stats">
+      <span class="chip" id="coinChip">🪙 <b id="coins">0</b></span>
+      <span class="chip" id="starChip">⭐ <b id="stars">0</b></span>
+      <button class="chip" id="fs" aria-label="Vollbild">⛶</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="shop">
+      <div class="bubble" id="bubble">
+        <div id="order"></div>
+        <button id="speak" aria-label="Bestellung nochmal anhören">🔊</button>
+      </div>
+      <div class="customer" id="customer" aria-label="Kunde"></div>
+      <div class="counter"></div>
+    </section>
+
+    <section class="station">
+      <div class="board">
+        <div class="pizza ball" id="pizza">
+          <div class="sauce" id="sauce"></div>
+          <div class="cheese" id="cheese"></div>
+          <div id="tops"></div>
+        </div>
+      </div>
+      <div id="flames"><span>🔥</span><span>🔥</span><span>🔥</span></div>
+      <div id="ovenbar"><div id="needle"></div></div>
+    </section>
+  </main>
+
+  <nav class="tray" id="tray"></nav>
+</div>
+
+<div id="toast"><span class="ti" id="toastIcon"></span><span id="toastText"></span></div>
+<div id="pin"></div>
+
+<div id="start">
+  <div class="big">🍕</div>
+  <h1>Pizzeria</h1>
+  <button id="go">Pizzeria öffnen</button>
+</div>
+
+<script>
+/* ---------- Zutaten ---------- */
+const TOPS = {
+  salami:{label:'Salami', one:'einer Salamischeibe', many:'Salamischeiben',
+    svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#C8322B" stroke="#9E2320" stroke-width="2"/><ellipse cx="13" cy="15" rx="3" ry="2" fill="#F2B9A8"/><ellipse cx="25" cy="12" rx="2" ry="1.5" fill="#F2B9A8"/><ellipse cx="27" cy="25" rx="3" ry="2" fill="#F2B9A8"/><ellipse cx="15" cy="27" rx="2" ry="1.5" fill="#F2B9A8"/><ellipse cx="20" cy="20" rx="1.5" ry="1" fill="#F2B9A8"/></svg>'},
+  pilz:{label:'Pilze', one:'einem Pilz', many:'Pilzen',
+    svg:'<svg viewBox="0 0 40 40"><path d="M5 22 Q5 6 20 6 Q35 6 35 22 Q35 25 31 25 L25 25 L26 34 Q20 37 14 34 L15 25 L9 25 Q5 25 5 22Z" fill="#EFE0C4" stroke="#9C7B55" stroke-width="2" stroke-linejoin="round"/><path d="M9 21 Q10 10 20 10 Q30 10 31 21" fill="none" stroke="#C9AE86" stroke-width="2"/></svg>'},
+  olive:{label:'Oliven', one:'einer Olive', many:'Oliven',
+    svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="13" fill="#2A2A2A"/><circle cx="20" cy="20" r="5.5" fill="#F4D06F"/><path d="M12 14 Q15 10 20 9.5" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>'},
+  paprika:{label:'Paprika', one:'einem Stück Paprika', many:'Stücken Paprika',
+    svg:'<svg viewBox="0 0 40 40"><path d="M6 29 Q20 3 34 29" fill="none" stroke="#2F8F4E" stroke-width="8" stroke-linecap="round"/><path d="M9 26 Q20 7 31 26" fill="none" stroke="#5CC27A" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+  ananas:{label:'Ananas', one:'einem Stück Ananas', many:'Stücken Ananas',
+    svg:'<svg viewBox="0 0 40 40"><path d="M7 11 L33 11 L26 32 L14 32Z" fill="#FFD23F" stroke="#D9A000" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 15 L18 28 M25 15 L22 28" stroke="#F0B400" stroke-width="2" stroke-linecap="round"/></svg>'},
+  mais:{label:'Mais', one:'einem Maiskorn', many:'Maiskörnern', small:true,
+    svg:'<svg viewBox="0 0 40 40"><path d="M20 5 Q32 10 30 24 Q28 34 20 34 Q12 34 10 24 Q8 10 20 5Z" fill="#FFC928" stroke="#DD9500" stroke-width="2.5"/><ellipse cx="16" cy="15" rx="3" ry="4" fill="#FFE27A"/></svg>'}
+};
+const POOL = ['salami','pilz','olive','paprika','ananas','mais'];
+const ANIMALS = ['🐻','🐰','🐱','🦊','🐸','🐼','🐷','🐯','🐨','🐶','🦁','🐮'];
+const NUM = ['null','ein','zwei','drei','vier','fünf'];
+const ICON_SAUCE = '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#D8392A"/><circle cx="14" cy="14" r="4" fill="#F06A55"/></svg>';
+const ICON_CHEESE = '<svg viewBox="0 0 40 40"><path d="M4 31 L36 31 L36 16 L10 9 Z" fill="#F7D35C" stroke="#D9A820" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="23" r="3" fill="#E6B93A"/><circle cx="28" cy="25" r="2.5" fill="#E6B93A"/><circle cx="27" cy="18" r="2" fill="#E6B93A"/></svg>';
+const SHRED_SVG = '<svg viewBox="0 0 40 40"><path d="M9 20 Q7 10 17 9 Q29 5 33 15 Q36 25 26 29 Q13 33 9 20Z" fill="#F7D35C" stroke="#E0B432" stroke-width="2" stroke-linejoin="round"/></svg>';
+const HINT = {
+  dough:{icon:'🥖', text:'Roll den Teig aus!', say:'Erst der Teig! Roll ihn mit dem Finger aus.'},
+  sauce:{icon:'🍅', text:'Mal die Soße auf!', say:'Jetzt die Soße! Mal sie mit dem Finger auf den Teig.'},
+  cheese:{icon:'🧀', text:'Streu den Käse drauf!', say:'Und jetzt der Käse! Streu ihn mit dem Finger über die Pizza.'},
+  build:{icon:'🧑‍🍳', text:'Jetzt belegen!', say:null}
+};
+const CHEESE_NEED = 45;      // Anzahl Käsefäden
+const RUBBLE = () => tone(560+Math.random()*220,.05,'triangle',.07);
+
+const S = {phase:'idle', sauce:false, cheese:false, pieces:[], shreds:[], order:null, sel:null,
+           served:0, coins:0, stars:0, animal:null, dough:0};
+
+const $ = id => document.getElementById(id);
+const SAVE_KEY = 'pizzeria-spielstand';
+function loadGame(){
+  try{ const d = JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+    S.coins = d.coins||0; S.stars = d.stars||0; S.served = d.served||0; }catch(e){}
+}
+function saveGame(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({coins:S.coins, stars:S.stars, served:S.served})); }catch(e){}
+}
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+
+/* ---------- Ton ---------- */
+let AC = null;
+function ac(){
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC && AC.state==='suspended') AC.resume();
+  return AC;
+}
+function tone(f, d=0.12, type='sine', vol=0.18, delay=0, slide=0){
+  const a = ac(); if(!a) return;
+  const t = a.currentTime + delay;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if(slide) o.frequency.exponentialRampToValueAtTime(f*slide, t+d);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+d);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t+d+0.03);
+}
+const SFX = {
+  pop:   () => tone(520,0.1,'sine',0.2,0,1.8),
+  click: () => tone(700,0.06,'triangle',0.12),
+  splat: () => tone(190,0.2,'triangle',0.22,0,0.5),
+  nope:  () => tone(220,0.12,'square',0.05),
+  undo:  () => tone(600,0.12,'sine',0.14,0,0.5),
+  ding:  () => { tone(1318,0.4,'sine',0.15); tone(1760,0.5,'sine',0.1,0.08); },
+  happy: () => [523,659,784,1047].forEach((f,i)=>tone(f,0.2,'triangle',0.16,i*0.1)),
+  soft:  () => [440,392].forEach((f,i)=>tone(f,0.22,'triangle',0.14,i*0.15)),
+  coin:  () => { tone(988,0.08,'square',0.06); tone(1319,0.22,'square',0.06,0.08); },
+  tick:  () => tone(300,0.05,'triangle',0.08),
+  roll:  () => tone(110+Math.random()*60,.09,'triangle',.06)
+};
+
+/* ---------- Sprache ---------- */
+let voice = null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => v.lang && v.lang.toLowerCase().startsWith('de')) || null;
+}
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'de-DE'; if(voice) u.voice = voice;
+  u.rate = 0.92; u.pitch = 1.15;
+  speechSynthesis.speak(u);
+}
+function orderSentence(o){
+  const parts = Object.entries(o).map(([t,n]) => n===1 ? TOPS[t].one : `${NUM[n]} ${TOPS[t].many}`);
+  const list = parts.length>1 ? parts.slice(0,-1).join(', ') + ' und ' + parts[parts.length-1] : parts[0];
+  return `Hallo! Ich möchte eine Pizza mit ${list}, bitte!`;
+}
+
+/* ---------- Schwierigkeit ---------- */
+const level = () => Math.min(3, Math.floor(S.served/3));
+const unlocked = () => POOL.slice(0, 3 + level());
+function makeOrder(){
+  const L = level();
+  const nTypes = [1, rnd(1,2), 2, rnd(2,3)][L];
+  const maxN = [3,3,4,5][L];
+  const o = {};
+  shuffle(unlocked()).slice(0,nTypes).forEach(t => o[t] = rnd(1,maxN));
+  return o;
+}
+
+/* ---------- Regal aufbauen ---------- */
+const BTN = {};
+function makeBtn(id, icon, label, cls=''){
+  const b = document.createElement('button');
+  b.className = 'tbtn ' + cls; b.id = 'b_' + id;
+  b.innerHTML = `<span class="ic">${icon}</span><span class="lb">${label}</span>`;
+  b.setAttribute('aria-label', label);
+  b.addEventListener('click', () => onBtn(id, b));
+  $('tray').appendChild(b); BTN[id] = b; return b;
+}
+function sep(){ const s=document.createElement('span'); s.className='sep'; $('tray').appendChild(s); }
+makeBtn('sauce', ICON_SAUCE, 'Soße');
+makeBtn('cheese', ICON_CHEESE, 'Käse');
+sep();
+POOL.forEach(t => makeBtn('t_'+t, TOPS[t].svg, TOPS[t].label));
+sep();
+makeBtn('undo', '↶', 'Zurück');
+makeBtn('bake', '🔥', 'Backen', 'act');
+makeBtn('serve', '🛎️', 'Servieren', 'act');
+
+function update(){
+  const b = S.phase==='build';
+  const ph = S.phase;
+  const set = (id, dis, pulse=false, sel=false) => {
+    BTN[id].classList.toggle('dis', dis);
+    BTN[id].classList.toggle('pulse', pulse && !dis);
+    BTN[id].classList.toggle('sel', sel);
+  };
+  BTN.sauce.classList.toggle('done', S.sauce);
+  BTN.cheese.classList.toggle('done', S.cheese);
+  set('sauce', ph!=='sauce', ph==='sauce');
+  set('cheese', ph!=='cheese', ph==='cheese');
+  const un = unlocked();
+  POOL.forEach(t => {
+    BTN['t_'+t].classList.toggle('hide', !un.includes(t));
+    set('t_'+t, !b || !S.cheese, false, S.sel===t);
+  });
+  set('undo', !b || S.pieces.length===0);
+  set('bake', !b || !S.cheese, b && S.cheese && S.pieces.length>0);
+  set('serve', S.phase!=='baked', S.phase==='baked');
+}
+
+function wiggle(el){ el.classList.remove('wig'); void el.offsetWidth; el.classList.add('wig'); }
+function nudge(){
+  SFX.nope();
+  const p = document.querySelector('.tbtn.pulse');
+  if(p) wiggle(p);
+}
+
+/* ---------- Knöpfe ---------- */
+function onBtn(id, el){
+  ac();
+  if(el.classList.contains('dis')){ nudge(); return; }
+  if(id==='sauce' || id==='cheese'){
+    // Knopf zeigt nur die Phase an – die Soße/den Käse macht die Geste auf der Pizza
+    wiggle(el); if(HINT[id]) say(HINT[id].say);
+  }
+  else if(id.startsWith('t_')){ S.sel = id.slice(2); SFX.click(); }
+  else if(id==='undo'){ const p = S.pieces.pop(); if(p){ p.el.remove(); SFX.undo(); } }
+  else if(id==='bake'){ bake(); return; }
+  else if(id==='serve'){ serve(); return; }
+  update();
+}
+
+/* ---------- Belegen ---------- */
+$('pizza').addEventListener('pointerdown', e => {
+  ac();
+  if(S.phase!=='build') return;
+  if(!S.cheese || !S.sel){ nudge(); return; }
+  if(S.pieces.length >= 25) return;
+  const r = $('pizza').getBoundingClientRect();
+  let x = (e.clientX - r.left)/r.width, y = (e.clientY - r.top)/r.height;
+  const dx = x-.5, dy = y-.5, d = Math.hypot(dx,dy);
+  if(d > .38){ const k = .38/d; x = .5+dx*k; y = .5+dy*k; }
+  addPiece(S.sel, x, y);
+});
+function addPiece(t, x, y){
+  const el = document.createElement('span');
+  el.className = 'piece' + (TOPS[t].small ? ' small' : '');
+  el.innerHTML = TOPS[t].svg;
+  el.style.left = (x*100)+'%'; el.style.top = (y*100)+'%';
+  el.style.setProperty('--r', rnd(-40,40)+'deg');
+  $('tops').appendChild(el);
+  S.pieces.push({t, el});
+  SFX.pop();
+  update();
+}
+
+/* ---------- Haptische Schritte: Teig / Soße / Käse ---------- */
+const board = document.querySelector('.board');
+let P = null;                 // aktiver Pointer
+let cnv = null, cctx = null;  // Male-Canvas für die Soße
+let lastRollSfx = 0;
+
+function startPhase(ph){
+  S.phase = ph; update();
+  const h = HINT[ph];
+  if(h){ showToast(h.icon, h.text); if(h.say && ph!=='dough') say(h.say); } // Teig-Hinweis sagt newCustomer (nach der Bestellung)
+  if(ph==='sauce') makePaintCanvas();
+}
+
+/* Teigball-Optik beim Ausrollen: längst des Wischens dehnen, quer zusammenquetschen */
+function rollDough(ang){
+  const p = $('pizza');
+  const w = p.offsetWidth;                      // Layout-Breite, unabhängig von der Skalierung
+  const prog = Math.min(1, (S.trav||0) / (w*2.2));   // ~2-3 Wischgesten über den Teig
+  S.dough = prog;
+  const sc = .24 + .76*prog;
+  const c = Math.cos(ang), s = Math.sin(ang);
+  const a = sc*1.06, b = sc*.94;                // Teig wird in Wischrichtung gedehnt
+  p.style.transform =
+    `matrix(${a*c*c+b*s*s},${(a-b)*c*s},${(a-b)*c*s},${a*s*s+b*c*c},0,0)`;
+  if(navigator.vibrate) navigator.vibrate(4);
+  if(prog >= 1){
+    S.phase = 'wait'; hidePin();
+    p.classList.remove('ball'); p.style.transform = '';
+    SFX.pop(); setTimeout(SFX.soft, 200);
+    setTimeout(() => startPhase('sauce'), 500);
+  }
+}
+
+function showPin(cx, cy, ang){
+  const pin = $('pin');
+  pin.classList.add('on');
+  pin.style.left = cx+'px'; pin.style.top = cy+'px';
+  pin.style.transform = `translate(-50%,-50%) rotate(${ang + Math.PI/2}rad)`;
+}
+function hidePin(){ $('pin').classList.remove('on'); }
+
+function makePaintCanvas(){
+  const p = $('pizza'); const r = p.getBoundingClientRect();
+  cnv = document.createElement('canvas'); cnv.id = 'paint';
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cnv.width = Math.round(r.width*dpr); cnv.height = Math.round(r.height*dpr);
+  p.insertBefore(cnv, $('tops'));
+  cctx = cnv.getContext('2d', {willReadFrequently:true});
+  cctx.beginPath(); cctx.arc(cnv.width/2, cnv.height/2, cnv.width*.46, 0, 7); cctx.clip();
+}
+function pizzaPos(cx, cy){   // Fingerposition → Normalisiert auf die Pizza (0..1), innerhalb r=.4
+  const r = $('pizza').getBoundingClientRect();
+  let x = (cx-r.left)/r.width, y = (cy-r.top)/r.height;
+  const dx = x-.5, dy = y-.5, d = Math.hypot(dx,dy);
+  if(d > .4){ const k = .4/d; x = .5+dx*k; y = .5+dy*k; }   // innerhalb des Teigs bleiben
+  return [x, y];
+}
+function saucePos(cx, cy){
+  const [x, y] = pizzaPos(cx, cy);
+  return [x*cnv.width, y*cnv.height];
+}
+function paintSauce(cx, cy, dist){
+  const [px, py] = saucePos(cx, cy);
+  cctx.strokeStyle = 'rgba(206,52,32,.93)';
+  cctx.lineWidth = cnv.width*.17; cctx.lineCap = 'round'; cctx.lineJoin = 'round';
+  cctx.beginPath();
+  if(P.lpx === undefined){ cctx.moveTo(px,py); cctx.lineTo(px+.1,py); }
+  else { cctx.moveTo(P.lpx, P.lpy); cctx.lineTo(px, py); }
+  cctx.stroke();
+  P.lpx = px; P.lpy = py;
+  P.paint += dist;
+  const now = performance.now();
+  if(dist > 1 && now-(P.sfxT||0) > 220){ tone(150+Math.random()*70,.09,'triangle',.11); P.sfxT = now; }
+  if(navigator.vibrate) navigator.vibrate(3);
+  if((++P.strokes) % 6 === 0) checkSauce();
+}
+function checkSauce(){
+  const w = cnv.width, h = cnv.height;
+  const data = cctx.getImageData(0,0,w,h).data;
+  const step = Math.max(3, Math.round(w/90));
+  let inside = 0, cov = 0;
+  for(let y=0;y<h;y+=step) for(let x=0;x<w;x+=step){
+    const nx = x/w-.5, ny = y/h-.5;
+    if(nx*nx+ny*ny > .4*.4) continue;
+    inside++;
+    if(data[((y*w+x)<<2)+3] > 70) cov++;
+  }
+  if(inside && cov/inside > .48) sauceDone();
+}
+function sauceDone(){
+  if(S.sauce) return;
+  S.sauce = true; S.phase = 'wait';
+  P = null; hidePin();
+  $('sauce').classList.add('on'); SFX.splat();
+  cnv.style.opacity = 0;
+  setTimeout(() => { if(cnv){ cnv.remove(); cnv = null; } }, 650);
+  setTimeout(() => startPhase('cheese'), 550);
+}
+function sprinkleCheese(cx, cy, dist){
+  const [x, y] = pizzaPos(cx, cy);
+  P.acc = (P.acc||0) + dist;
+  while(P.acc > 9){
+    P.acc -= 9;
+    let jx = x + (Math.random()-.5)*.15, jy = y + (Math.random()-.5)*.15;
+    const dx = jx-.5, dy = jy-.5, d = Math.hypot(dx,dy);
+    if(d > .4){ const k = .4/d; jx = .5+dx*k; jy = .5+dy*k; }
+    spawnShred(jx, jy);
+    if(S.shreds.length >= CHEESE_NEED){ cheeseDone(); break; }
+  }
+}
+function spawnShred(x, y){
+  const el = document.createElement('span');
+  el.className = 'piece small';
+  el.innerHTML = SHRED_SVG;
+  el.style.left = (x*100)+'%'; el.style.top = (y*100)+'%';
+  el.style.setProperty('--r', rnd(-60,60)+'deg');
+  $('tops').appendChild(el);
+  S.shreds.push(el);
+  if(navigator.vibrate) navigator.vibrate(3);
+  if(S.shreds.length % 4 === 0) RUBBLE();
+}
+function cheeseDone(){
+  if(S.cheese) return;
+  S.cheese = true; S.phase = 'wait';
+  P = null;
+  $('cheese').classList.add('on'); SFX.splat(); setTimeout(SFX.pop, 200);
+  const tops = $('tops'); tops.classList.add('fade');
+  setTimeout(() => { tops.innerHTML = ''; tops.classList.remove('fade'); }, 600);
+  setTimeout(() => startPhase('build'), 620);
+}
+
+board.addEventListener('pointerdown', e => {
+  ac();
+  if(!['dough','sauce','cheese'].includes(S.phase)) return;
+  if(P) return;
+  e.preventDefault();
+  P = {id:e.pointerId, lx:e.clientX, ly:e.clientY, paint:0, strokes:0};
+  try{ board.setPointerCapture(e.pointerId); }catch(err){}
+  if(S.phase==='dough') showPin(e.clientX, e.clientY, 0);
+});
+board.addEventListener('pointermove', e => {
+  if(!P || e.pointerId !== P.id) return;
+  const dx = e.clientX-P.lx, dy = e.clientY-P.ly;
+  const dist = Math.hypot(dx,dy);
+  P.lx = e.clientX; P.ly = e.clientY;
+  if(dist < 1.5) return;
+  if(S.phase==='dough'){
+    S.trav = (S.trav||0) + dist;                 // Fortschritt sammelt sich über mehrere Wische
+    showPin(e.clientX, e.clientY, Math.atan2(dy,dx));
+    const now = performance.now();
+    if(now-lastRollSfx > 130){ SFX.roll(); lastRollSfx = now; }
+    rollDough(Math.atan2(dy,dx));
+  }
+  else if(S.phase==='sauce') paintSauce(e.clientX, e.clientY, dist);
+  else if(S.phase==='cheese') sprinkleCheese(e.clientX, e.clientY, dist);
+});
+['pointerup','pointercancel'].forEach(ev =>
+  board.addEventListener(ev, e => { if(P && e.pointerId===P.id){ P = null; hidePin(); } }));
+
+/* ---------- Bestellung anzeigen ---------- */
+function renderOrder(){
+  const box = $('order'); box.innerHTML = '';
+  Object.entries(S.order).forEach(([t,n]) => {
+    const row = document.createElement('div'); row.className = 'orow';
+    for(let i=0;i<n;i++){ const s=document.createElement('span'); s.className='oi'; s.innerHTML=TOPS[t].svg; row.appendChild(s); }
+    box.appendChild(row);
+  });
+}
+function bubbleText(txt){ $('order').innerHTML = `<div class="say">${txt}</div>`; }
+
+/* ---------- Ablauf ---------- */
+function resetPizza(){
+  const p = $('pizza');
+  p.style.transition = 'none';
+  p.className = 'pizza ball';
+  p.style.transform = '';
+  void p.offsetWidth; p.style.transition = '';
+  $('sauce').classList.remove('on'); $('cheese').classList.remove('on');
+  const tops = $('tops'); tops.innerHTML = ''; tops.classList.remove('fade');
+  if(cnv){ cnv.remove(); cnv = null; }
+  hidePin();
+  S.sauce = S.cheese = false; S.pieces = []; S.shreds = []; S.sel = null; S.dough = 0; S.trav = 0;
+}
+
+function newCustomer(){
+  resetPizza();
+  let a; do{ a = pick(ANIMALS); } while(a===S.animal);
+  S.animal = a;
+  const c = $('customer');
+  c.style.transition = 'none'; c.className = 'customer'; c.textContent = a;
+  void c.offsetWidth; c.style.transition = '';
+  c.classList.add('in');
+  S.order = makeOrder(); S.phase = 'wait';
+  $('bubble').classList.remove('show');
+  update();
+  setTimeout(() => {
+    renderOrder();
+    $('bubble').classList.add('show');
+    startPhase('dough');
+    say(orderSentence(S.order));
+    // Nach der Bestellung noch einmal an die erste Geste erinnern, falls noch nicht gerollt
+    setTimeout(() => { if(S.phase==='dough' && S.dough < .15) say(HINT.dough.say); }, 3400);
+  }, 850);
+}
+
+/* ---------- Backen mit Timing-Spiel ---------- */
+let ovenStop = null;
+const GREEN_A = .38, GREEN_B = .64;   // grüner Bereich der Backleiste
+
+function bake(){
+  S.phase = 'baking'; S.sel = null; update();
+  $('pizza').classList.add('baking'); $('flames').classList.add('on');
+  const needle = $('needle');
+  needle.style.left = '0%';
+  $('ovenbar').classList.add('on');
+  const t0 = performance.now(), DUR = 3200;   // ein Sweep, ~3 Sekunden
+  let curP = 0, lastTick = 0;
+  const frame = now => {
+    if(!ovenStop) return;
+    curP = Math.min(1, (now-t0)/DUR);
+    needle.style.left = (curP*100)+'%';
+    if(now-lastTick > 240){ tone(380+curP*640,.05,'triangle',.05); lastTick = now; }
+    if(curP >= 1) ovenResult(1);              // zu lange gewartet
+    else requestAnimationFrame(frame);
+  };
+  ovenStop = () => ovenResult(curP);
+  requestAnimationFrame(frame);
+}
+
+function ovenResult(p){
+  if(!ovenStop) return;
+  ovenStop = null;
+  $('ovenbar').classList.remove('on');
+  $('pizza').classList.remove('baking'); $('pizza').classList.add('baked');
+  $('flames').classList.remove('on');
+  SFX.ding();
+  if(p >= GREEN_A && p <= GREEN_B){
+    showToast('🌟','Perfekt knusprig! +1 🪙');
+    say('Perfekt knusprig! Punktlandung!');
+    S.coins += 1; $('coins').textContent = S.coins; saveGame();
+    bumpChip('coinChip'); setTimeout(SFX.coin, 350);
+  } else if(p < GREEN_A){
+    showToast('🙂','Noch ganz blass!');
+    say('Noch ganz blass! Das geht noch.');
+  } else {
+    $('pizza').classList.add('dark');
+    showToast('😋','Knusprig dunkel!');
+    say('Huch, schön knusprig geworden!');
+  }
+  S.phase = 'baked'; update();
+}
+document.querySelector('.station').addEventListener('pointerdown', () => { if(ovenStop) ovenStop(); });
+
+function counts(){ const c={}; S.pieces.forEach(p => c[p.t]=(c[p.t]||0)+1); return c; }
+
+function serve(){
+  S.phase = 'serving'; update();
+  const got = counts();
+  const keys = new Set([...Object.keys(S.order), ...Object.keys(got)]);
+  let ok = true; keys.forEach(k => { if((S.order[k]||0)!==(got[k]||0)) ok = false; });
+
+  // Pizza fliegt zur Kundschaft
+  const p = $('pizza'), c = $('customer');
+  const pr = p.getBoundingClientRect(), cr = c.getBoundingClientRect();
+  p.style.setProperty('--fx', (cr.left+cr.width/2 - (pr.left+pr.width/2))+'px');
+  p.style.setProperty('--fy', (cr.top+cr.height/2 - (pr.top+pr.height/2))+'px');
+  p.classList.add('fly');
+
+  const before = level();
+  setTimeout(() => {
+    S.served++;
+    if(ok){
+      S.coins += 3; S.stars += 1;
+      bubbleText('Mmmh, lecker! 😋');
+      say('Mmmh, lecker! Danke schön!');
+      SFX.happy(); setTimeout(SFX.coin, 450);
+      burst(c, ['❤️','⭐','💛','✨']);
+      bumpChip('starChip');
+    } else {
+      S.coins += 1;
+      bubbleText('Danke! Fast richtig 🙂');
+      say('Danke! Das war fast richtig.');
+      SFX.soft(); setTimeout(SFX.coin, 450);
+      burst(c, ['🙂','✨']);
+    }
+    c.classList.add('happy');
+    $('coins').textContent = S.coins; $('stars').textContent = S.stars;
+    bumpChip('coinChip'); saveGame();
+  }, 700);
+
+  setTimeout(() => {
+    $('bubble').classList.remove('show');
+    c.classList.remove('happy'); c.classList.add('leave');
+  }, 2800);
+
+  setTimeout(() => {
+    const after = level();
+    if(after > before){
+      const t = POOL[2+after];
+      showToast(TOPS[t].svg, 'Neu: ' + TOPS[t].label + '!');
+      say('Neue Zutat: ' + TOPS[t].label + '!');
+      update();
+      BTN['t_'+t].classList.add('new');
+      setTimeout(() => BTN['t_'+t].classList.remove('new'), 700);
+      setTimeout(newCustomer, 2200);
+    } else newCustomer();
+  }, 3600);
+}
+
+/* ---------- Effekte ---------- */
+function burst(origin, chars){
+  const r = origin.getBoundingClientRect();
+  for(let i=0;i<10;i++){
+    const s = document.createElement('span');
+    s.className = 'fx'; s.textContent = pick(chars);
+    s.style.left = (r.left + r.width/2 - 22)+'px';
+    s.style.top = (r.top + r.height*0.2)+'px';
+    s.style.setProperty('--dx', rnd(-140,140)+'px');
+    s.style.setProperty('--dy', rnd(-260,-140)+'px');
+    s.style.animationDelay = (i*40)+'ms';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 1700);
+  }
+}
+function bumpChip(id){ const el=$(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+let toastT;
+function showToast(icon, text){
+  $('toastIcon').innerHTML = icon; $('toastText').textContent = text;
+  $('toast').classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => $('toast').classList.remove('show'), 2000);
+}
+
+/* ---------- Sonstiges ---------- */
+$('speak').addEventListener('click', () => { if(S.order && S.phase!=='serving') say(orderSentence(S.order)); });
+$('customer').addEventListener('click', () => { if(S.order && ['build','baking','baked'].includes(S.phase)) say(orderSentence(S.order)); });
+$('fs').addEventListener('click', toggleFs);
+function toggleFs(){
+  const d = document;
+  if(!d.fullscreenElement){ d.documentElement.requestFullscreen?.().catch(()=>{}); }
+  else d.exitFullscreen?.();
+}
+$('go').addEventListener('click', () => {
+  ac();
+  if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+  $('start').remove();
+  setTimeout(newCustomer, 300);
+});
+document.addEventListener('contextmenu', e => e.preventDefault());
+loadGame();
+$('coins').textContent = S.coins; $('stars').textContent = S.stars;
+update();
+
+// Eltern-Reset: Stern-Anzeige 3 Sekunden gedrückt halten
+let resetT;
+$('starChip').addEventListener('pointerdown', () => { resetT = setTimeout(() => {
+  if(confirm('Spielstand wirklich zurücksetzen?')){ localStorage.removeItem(SAVE_KEY); location.reload(); }
+}, 3000); });
+['pointerup','pointerleave','pointercancel'].forEach(ev => $('starChip').addEventListener(ev, () => clearTimeout(resetT)));
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(()=>{}));
+}
+</script>
+</body>
+</html>
