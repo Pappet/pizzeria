@@ -128,8 +128,8 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
   transform:translate(-50%,-50%) rotate(var(--r));animation:pop .28s cubic-bezier(.3,1.6,.5,1)}
 .piece.small{width:calc(var(--pz)*.075)}
 @keyframes pop{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(0)}}
-#flames{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);font-size:clamp(40px,8vh,70px);
-  opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:-.1em}
+#flames{position:absolute;bottom:calc(3% + clamp(30px,5vh,44px) + 2px);left:50%;transform:translateX(-50%);font-size:clamp(40px,8vh,70px);
+  opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:-.1em;z-index:7}
 #flames.on{opacity:1}
 #flames span{display:inline-block;animation:flick .3s infinite alternate}
 #flames span:nth-child(2){animation-delay:.1s}
