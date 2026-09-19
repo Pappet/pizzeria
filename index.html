@@ -254,17 +254,17 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 <script>
 /* ---------- Zutaten ---------- */
 const TOPS = {
-  salami:{label:'Salami', one:'einer Salamischeibe', many:'Salamischeiben',
+  salami:{label:'Salami', sin:'einer Salami', plu:'Salami',
     svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#C8322B" stroke="#9E2320" stroke-width="2"/><ellipse cx="13" cy="15" rx="3" ry="2" fill="#F2B9A8"/><ellipse cx="25" cy="12" rx="2" ry="1.5" fill="#F2B9A8"/><ellipse cx="27" cy="25" rx="3" ry="2" fill="#F2B9A8"/><ellipse cx="15" cy="27" rx="2" ry="1.5" fill="#F2B9A8"/><ellipse cx="20" cy="20" rx="1.5" ry="1" fill="#F2B9A8"/></svg>'},
-  pilz:{label:'Pilze', one:'einem Pilz', many:'Pilzen',
+  pilz:{label:'Pilze', sin:'einem Pilz', plu:'Pilzen',
     svg:'<svg viewBox="0 0 40 40"><path d="M5 22 Q5 6 20 6 Q35 6 35 22 Q35 25 31 25 L25 25 L26 34 Q20 37 14 34 L15 25 L9 25 Q5 25 5 22Z" fill="#EFE0C4" stroke="#9C7B55" stroke-width="2" stroke-linejoin="round"/><path d="M9 21 Q10 10 20 10 Q30 10 31 21" fill="none" stroke="#C9AE86" stroke-width="2"/></svg>'},
-  olive:{label:'Oliven', one:'einer Olive', many:'Oliven',
+  olive:{label:'Oliven', sin:'einer Olive', plu:'Oliven',
     svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="13" fill="#2A2A2A"/><circle cx="20" cy="20" r="5.5" fill="#F4D06F"/><path d="M12 14 Q15 10 20 9.5" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>'},
-  paprika:{label:'Paprika', one:'einem Stück Paprika', many:'Stücken Paprika',
+  paprika:{label:'Paprika', sin:'einem Paprika', plu:'Paprika',
     svg:'<svg viewBox="0 0 40 40"><path d="M6 29 Q20 3 34 29" fill="none" stroke="#2F8F4E" stroke-width="8" stroke-linecap="round"/><path d="M9 26 Q20 7 31 26" fill="none" stroke="#5CC27A" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-  ananas:{label:'Ananas', one:'einem Stück Ananas', many:'Stücken Ananas',
+  ananas:{label:'Ananas', sin:'einer Ananas', plu:'Ananas',
     svg:'<svg viewBox="0 0 40 40"><path d="M7 11 L33 11 L26 32 L14 32Z" fill="#FFD23F" stroke="#D9A000" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 15 L18 28 M25 15 L22 28" stroke="#F0B400" stroke-width="2" stroke-linecap="round"/></svg>'},
-  mais:{label:'Mais', one:'einem Maiskorn', many:'Maiskörnern', small:true,
+  mais:{label:'Mais', sin:'einem Mais', plu:'Mais', small:true,
     svg:'<svg viewBox="0 0 40 40"><path d="M20 5 Q32 10 30 24 Q28 34 20 34 Q12 34 10 24 Q8 10 20 5Z" fill="#FFC928" stroke="#DD9500" stroke-width="2.5"/><ellipse cx="16" cy="15" rx="3" ry="4" fill="#FFE27A"/></svg>'}
 };
 const POOL = ['salami','pilz','olive','paprika','ananas','mais'];
@@ -274,9 +274,9 @@ const ICON_SAUCE = '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill
 const ICON_CHEESE = '<svg viewBox="0 0 40 40"><path d="M4 31 L36 31 L36 16 L10 9 Z" fill="#F7D35C" stroke="#D9A820" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="23" r="3" fill="#E6B93A"/><circle cx="28" cy="25" r="2.5" fill="#E6B93A"/><circle cx="27" cy="18" r="2" fill="#E6B93A"/></svg>';
 const SHRED_SVG = '<svg viewBox="0 0 40 40"><path d="M9 20 Q7 10 17 9 Q29 5 33 15 Q36 25 26 29 Q13 33 9 20Z" fill="#F7D35C" stroke="#E0B432" stroke-width="2" stroke-linejoin="round"/></svg>';
 const HINT = {
-  dough:{icon:'🥖', text:'Roll den Teig aus!', say:'Erst der Teig! Roll ihn mit dem Finger aus.'},
-  sauce:{icon:'🍅', text:'Mal die Soße auf!', say:'Jetzt die Soße! Mal sie mit dem Finger auf den Teig.'},
-  cheese:{icon:'🧀', text:'Streu den Käse drauf!', say:'Und jetzt der Käse! Streu ihn mit dem Finger über die Pizza.'},
+  dough:{icon:'🥖', text:'Roll den Teig aus!', say:'Erst der Teig!'},
+  sauce:{icon:'🍅', text:'Mal die Soße auf!', say:'Jetzt die Soße!'},
+  cheese:{icon:'🧀', text:'Streu den Käse drauf!', say:'Jetzt der Käse!'},
   build:{icon:'🧑‍🍳', text:'Jetzt belegen!', say:null}
 };
 const CHEESE_NEED = 45;      // Anzahl Käsefäden
@@ -343,13 +343,13 @@ function say(text){
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'de-DE'; if(voice) u.voice = voice;
-  u.rate = 0.92; u.pitch = 1.15;
+  u.rate = 1; u.pitch = 1.15;
   speechSynthesis.speak(u);
 }
 function orderSentence(o){
-  const parts = Object.entries(o).map(([t,n]) => n===1 ? TOPS[t].one : `${NUM[n]} ${TOPS[t].many}`);
+  const parts = Object.entries(o).map(([t,n]) => n===1 ? TOPS[t].sin : `${NUM[n]} ${TOPS[t].plu}`);
   const list = parts.length>1 ? parts.slice(0,-1).join(', ') + ' und ' + parts[parts.length-1] : parts[0];
-  return `Hallo! Ich möchte eine Pizza mit ${list}, bitte!`;
+  return `Pizza mit ${list}!`;
 }
 
 /* ---------- Schwierigkeit ---------- */
@@ -690,16 +690,16 @@ function ovenResult(p){
   SFX.ding();
   if(p >= GREEN_A && p <= GREEN_B){
     showToast('🌟','Perfekt knusprig! +1 🪙');
-    say('Perfekt knusprig! Punktlandung!');
+    say('Perfekt knusprig!');
     S.coins += 1; $('coins').textContent = S.coins; saveGame();
     bumpChip('coinChip'); setTimeout(SFX.coin, 350);
   } else if(p < GREEN_A){
     showToast('🙂','Noch ganz blass!');
-    say('Noch ganz blass! Das geht noch.');
+    say('Noch ganz blass!');
   } else {
     $('pizza').classList.add('dark');
     showToast('😋','Knusprig dunkel!');
-    say('Huch, schön knusprig geworden!');
+    say('Ganz schön dunkel!');
   }
   S.phase = 'baked'; update();
 }
@@ -726,14 +726,14 @@ function serve(){
     if(ok){
       S.coins += 3; S.stars += 1;
       bubbleText('Mmmh, lecker! 😋');
-      say('Mmmh, lecker! Danke schön!');
+      say('Lecker! Danke!');
       SFX.happy(); setTimeout(SFX.coin, 450);
       burst(c, ['❤️','⭐','💛','✨']);
       bumpChip('starChip');
     } else {
       S.coins += 1;
       bubbleText('Danke! Fast richtig 🙂');
-      say('Danke! Das war fast richtig.');
+      say('Fast richtig!');
       SFX.soft(); setTimeout(SFX.coin, 450);
       burst(c, ['🙂','✨']);
     }
@@ -752,7 +752,7 @@ function serve(){
     if(after > before){
       const t = POOL[2+after];
       showToast(TOPS[t].svg, 'Neu: ' + TOPS[t].label + '!');
-      say('Neue Zutat: ' + TOPS[t].label + '!');
+      say('Neu: ' + TOPS[t].label + '!');
       update();
       BTN['t_'+t].classList.add('new');
       setTimeout(() => BTN['t_'+t].classList.remove('new'), 700);
