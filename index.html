@@ -338,13 +338,32 @@ function pickVoice(){
   voice = vs.find(v => v.lang && v.lang.toLowerCase().startsWith('de')) || null;
 }
 if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-function say(text){
-  if(!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
+/* Ansagen laufen als Warteschlange komplett durch, nichts wird abgebrochen. */
+let sayQueue = [];
+let currentUtter = null;
+function isSpeaking(){
+  return sayQueue.length > 0 || (currentUtter !== null);
+}
+function speakNext(){
+  const text = sayQueue[0];
+  if(text === undefined){ currentUtter = null; return; }
   const u = new SpeechSynthesisUtterance(text);
+  currentUtter = u;
   u.lang = 'de-DE'; if(voice) u.voice = voice;
   u.rate = 1; u.pitch = 1.15;
+  u.onend = u.onerror = () => { sayQueue.shift(); speakNext(); };
   speechSynthesis.speak(u);
+}
+function say(text){
+  if(!('speechSynthesis' in window) || !text) return;
+  // Selbstheilung: hängt die Schlange, obwohl nichts gesprochen wird (z. B. Chrome-Bug bei Hintergrund-Tabs), neu starten
+  if(sayQueue.length && !speechSynthesis.speaking && !speechSynthesis.pending){
+    sayQueue = []; currentUtter = null;
+  }
+  if(sayQueue.includes(text)) return;              // nicht doppelt einreihen
+  if(sayQueue.length >= 5) sayQueue.pop();         // Notbremse gegen Stau
+  sayQueue.push(text);
+  if(sayQueue.length === 1) speakNext();
 }
 function orderSentence(o){
   const parts = Object.entries(o).map(([t,n]) => n===1 ? TOPS[t].sin : `${NUM[n]} ${TOPS[t].plu}`);
@@ -653,7 +672,7 @@ function newCustomer(){
     startPhase('dough');
     say(orderSentence(S.order));
     // Nach der Bestellung noch einmal an die erste Geste erinnern, falls noch nicht gerollt
-    setTimeout(() => { if(S.phase==='dough' && S.dough < .15) say(HINT.dough.say); }, 3400);
+    setTimeout(() => { if(S.phase==='dough' && S.dough < .15 && !isSpeaking()) say(HINT.dough.say); }, 3400);
   }, 850);
 }
 
