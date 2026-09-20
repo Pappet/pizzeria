@@ -1,12 +1,13 @@
 // Nach jeder Änderung hochzählen, sonst liefert der Service Worker die alte Version aus.
-const VERSION = 'v11';
+const VERSION = 'v12';
 const CACHE = `pizzeria-${VERSION}`;
-const SHELL = ['./', './index.html', './manifest.webmanifest',
+const SHELL = ['./', './index.html', './manifest.webmanifest', './fonts/fredoka-latin.woff2',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png',
   './icons/icon-180.png', './icons/favicon-32.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(SHELL.map(f => c.add(f)))));
+  // cache:'reload' umgeht den HTTP-Cache, sonst landet nach einem Update die alte index.html im neuen Cache
+  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(SHELL.map(f => c.add(new Request(f, {cache:'reload'}))))));
   self.skipWaiting();
 });
 
@@ -21,8 +22,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (url.origin !== self.location.origin && !isFont) return;
+  if (url.origin !== self.location.origin) return;
 
   // Cache zuerst (Spiel läuft offline), Netz ergänzt den Cache.
   e.respondWith((async () => {

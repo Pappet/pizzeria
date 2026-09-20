@@ -9,9 +9,10 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/favicon-32.png">
 <link rel="apple-touch-icon" href="./icons/icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+/* Fredoka (SIL OFL 1.1, siehe fonts/OFL.txt) liegt lokal, damit nichts an Google geht und Offline-Erststart passt */
+@font-face{font-family:'Fredoka';font-style:normal;font-weight:300 700;font-display:swap;
+  src:url('./fonts/fredoka-latin.woff2') format('woff2')}
 :root{
   --tomato:#E4412B; --basil:#2F8F4E; --dough:#F3D29B; --crust:#D9A05B;
   --wood:#9A6236; --tile:#D6EEF3; --tile2:#C2E4ED; --ink:#3A2418; --cheese:#F7D35C;
@@ -48,6 +49,7 @@ header{position:relative;height:74px;flex:none;z-index:5}
 .chip{background:#fff;border-radius:999px;padding:3px 14px;font-weight:700;font-size:22px;
   box-shadow:0 3px 0 rgba(0,0,0,.15);border:none;font-family:inherit;color:inherit;display:flex;align-items:center;gap:6px}
 .chip.bump{animation:bump .4s}
+.chip.rnd{width:52px;height:52px;padding:0;justify-content:center;border-radius:50%;font-size:24px;cursor:pointer}
 @keyframes bump{50%{transform:scale(1.3)}}
 
 main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px;padding:8px 20px 0}
@@ -55,7 +57,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 /* Kundschaft */
 .shop{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-height:0}
 .bubble{position:relative;background:#fff;border:4px solid var(--ink);border-radius:28px;
-  padding:14px 54px 14px 18px;min-height:80px;min-width:180px;max-width:100%;margin-bottom:22px;
+  padding:14px 78px 14px 18px;min-height:80px;min-width:200px;max-width:100%;margin-bottom:22px;
   flex-shrink:0;opacity:0;transform:scale(.5);transform-origin:50% 100%;transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
 .bubble.show{opacity:1;transform:scale(1)}
 .bubble::after{content:'';position:absolute;width:22px;height:22px;background:#fff;
@@ -66,8 +68,14 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 .oi{width:clamp(28px,6vh,54px);height:clamp(28px,6vh,54px)}
 .oi svg,.ic svg,.piece svg{width:100%;height:100%;display:block}
 .say{font-size:clamp(20px,3vh,28px);font-weight:600;line-height:1.25}
-#speak{position:absolute;right:8px;top:8px;width:40px;height:40px;border-radius:50%;border:none;
-  background:var(--tile);font-size:20px;cursor:pointer}
+/* „Fast richtig“: bestellt aber nicht drauf = blass, drauf aber nicht bestellt = durchgestrichen */
+.oi.miss{opacity:.28}
+.oi.extra{position:relative}
+.oi.extra::after{content:'✕';position:absolute;inset:0;display:grid;place-items:center;
+  color:var(--tomato);font-weight:700;font-size:1.6em;text-shadow:0 0 4px #fff,0 0 4px #fff}
+#speak{position:absolute;right:6px;top:6px;width:64px;height:64px;border-radius:50%;border:none;
+  background:var(--tile);font-size:30px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12)}
+#speak:active{transform:translateY(2px);box-shadow:none}
 .customer{font-size:clamp(100px,25vh,230px);line-height:1;position:relative;z-index:1;margin-bottom:-.12em;min-height:0;
   transform:translateX(-140vw);transition:transform .8s cubic-bezier(.2,.9,.3,1.1);cursor:pointer}
 .customer.in{transform:translateX(0)}
@@ -141,7 +149,10 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
   width:calc(var(--pz)*1.02);height:clamp(30px,5vh,44px);border-radius:999px;
   border:4px solid var(--ink);z-index:8;display:none;box-shadow:0 5px 0 rgba(0,0,0,.22);cursor:pointer;
   background:linear-gradient(90deg,#FFF3D6 0 36%,#5CC27A 36% 64%,#A55B22 76%,#6B3A12 100%)}
+.board.wig{animation:wig .4s}
 #ovenbar.on{display:block}
+#ovenbar::after{content:'✓';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:#fff;font-weight:700;font-size:clamp(18px,3.4vh,28px);text-shadow:0 2px 0 rgba(0,0,0,.3)}
 #needle{position:absolute;top:-7px;bottom:-7px;width:14px;border-radius:8px;left:0;
   transform:translateX(-50%);background:#fff;border:3px solid var(--ink);box-shadow:0 2px 4px rgba(0,0,0,.3)}
 
@@ -151,7 +162,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
   background:linear-gradient(#A56A3B,#83532C);border-top:8px solid #C98B52;position:relative;z-index:3}
 .sep{width:4px;align-self:stretch;margin:6px 4px;border-radius:2px;background:rgba(0,0,0,.18)}
 /* Breite so gerechnet, dass alle 11 Knöpfe (+2 Trenner) in eine Zeile passen */
-.tbtn{width:clamp(56px,calc((100vw - 168px)/11),104px);aspect-ratio:1;border-radius:22px;border:none;background:#FFF8EC;
+.tbtn{position:relative;width:clamp(56px,calc((100vw - 168px)/11),104px);aspect-ratio:1;border-radius:22px;border:none;background:#FFF8EC;
   box-shadow:0 6px 0 #5E3A1C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   font-family:inherit;color:var(--ink);cursor:pointer;padding:6px;transition:transform .12s,opacity .2s,background .2s}
 .tbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #5E3A1C}
@@ -161,6 +172,10 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 .tbtn.sel{background:#FFEFA8;outline:5px solid var(--basil);transform:translateY(-6px)}
 .tbtn.dis{opacity:.4}
 .tbtn.done{background:#D8F0D4}
+.tbtn.done.dis{opacity:.9}
+.tbtn.done::after{content:'✓';position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;
+  background:var(--basil);color:#fff;font-size:20px;font-weight:700;display:grid;place-items:center;
+  border:3px solid #fff;box-shadow:0 2px 0 rgba(0,0,0,.2)}
 .tbtn.pulse{animation:pulse 1.1s infinite}
 @keyframes pulse{50%{box-shadow:0 6px 0 #5E3A1C,0 0 0 9px #FFD640;transform:scale(1.06)}}
 .tbtn.wig{animation:wig .4s}
@@ -191,21 +206,35 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 #go:active{transform:translateY(5px);box-shadow:0 3px 0 #1F6A37}
 
 @media (orientation:portrait){
-  :root{--pz:min(74vw,40vh)}
+  :root{--pz:min(74vw,35vh)}   /* 35vh: Brett muss neben 2 Regalreihen + Sprechblase in 768×1024 passen */
   main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .shop{flex-direction:row;align-items:center;justify-content:center;gap:24px;padding-top:6px}
   .customer{font-size:min(14vh,24vw);margin:0}
   .bubble{margin:0;flex-shrink:1}
-  .oi{width:clamp(28px,7vw,54px);height:clamp(28px,7vw,54px)}
+  .oi{width:clamp(28px,5.5vw,48px);height:clamp(28px,5.5vw,48px)}   /* bis 4 Reihen à 4 Stück müssen über dem Brett Platz haben */
   .bubble::after{bottom:auto;left:auto;top:50%;right:-15px;transform:translateY(-50%) rotate(-45deg)}
   .counter{display:none}
-  #toast{font-size:22px;padding:8px 14px;gap:8px;max-width:36vw}
+  #toast{font-size:22px;padding:8px 14px;gap:8px;max-width:80vw}   /* sitzt jetzt über dem Brett, nicht mehr neben der Sprechblase */
   #toast .ti{width:36px;height:36px}
+  .tray{gap:8px}
+  /* Hochformat hat Höhe übrig: lieber 2 Reihen mit fingergroßen Knöpfen als 11 winzige in einer */
+  .tbtn{width:clamp(72px,calc((100vw - 100px)/6),92px)}
+  .tbtn .lb{font-size:clamp(11px,2vw,16px)}
+  .tbtn .ic{font-size:clamp(26px,5vw,40px)}
+  #toast{left:50%;right:auto;transform:translate(-50%,-30px)}
+  #toast.show{transform:translate(-50%,0)}
+}
+/* Handy hochkant: 6 kleinere Knöpfe pro Reihe, sonst 3 Reihen und das Brett rutscht ins Regal */
+@media (orientation:portrait) and (max-width:520px){
+  .tbtn{width:clamp(50px,calc((100vw - 70px)/6),72px);border-radius:16px}
+  .tbtn .lb{font-size:9px}
+  .tbtn .ic{font-size:22px}
   .tray{gap:6px}
-  .tbtn{width:clamp(56px,calc((100vw - 144px)/11),110px)}
+  .sign{display:none}   /* Platz für die Chips */
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .tbtn.pulse{outline:6px solid #FFD640;outline-offset:2px}   /* ohne Animation muss der nächste Schritt trotzdem leuchten */
 }
 </style>
 </head>
@@ -217,7 +246,8 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
     <div class="stats">
       <span class="chip" id="coinChip">🪙 <b id="coins">0</b></span>
       <span class="chip" id="starChip">⭐ <b id="stars">0</b></span>
-      <button class="chip" id="fs" aria-label="Vollbild">⛶</button>
+      <button class="chip rnd" id="mute" aria-label="Ton an/aus">🔊</button>
+      <button class="chip rnd" id="fs" aria-label="Vollbild">⛶</button>
     </div>
   </header>
 
@@ -265,11 +295,11 @@ const TOPS = {
     svg:'<svg viewBox="0 0 40 40"><path d="M5 22 Q5 6 20 6 Q35 6 35 22 Q35 25 31 25 L25 25 L26 34 Q20 37 14 34 L15 25 L9 25 Q5 25 5 22Z" fill="#EFE0C4" stroke="#9C7B55" stroke-width="2" stroke-linejoin="round"/><path d="M9 21 Q10 10 20 10 Q30 10 31 21" fill="none" stroke="#C9AE86" stroke-width="2"/></svg>'},
   olive:{label:'Oliven', sin:'einer Olive', plu:'Oliven',
     svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="13" fill="#2A2A2A"/><circle cx="20" cy="20" r="5.5" fill="#F4D06F"/><path d="M12 14 Q15 10 20 9.5" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>'},
-  paprika:{label:'Paprika', sin:'einem Paprika', plu:'Paprika',
+  paprika:{label:'Paprika', sin:'einer Paprika', plu:'Paprika',
     svg:'<svg viewBox="0 0 40 40"><path d="M6 29 Q20 3 34 29" fill="none" stroke="#2F8F4E" stroke-width="8" stroke-linecap="round"/><path d="M9 26 Q20 7 31 26" fill="none" stroke="#5CC27A" stroke-width="2.5" stroke-linecap="round"/></svg>'},
   ananas:{label:'Ananas', sin:'einer Ananas', plu:'Ananas',
     svg:'<svg viewBox="0 0 40 40"><path d="M7 11 L33 11 L26 32 L14 32Z" fill="#FFD23F" stroke="#D9A000" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 15 L18 28 M25 15 L22 28" stroke="#F0B400" stroke-width="2" stroke-linecap="round"/></svg>'},
-  mais:{label:'Mais', sin:'einem Mais', plu:'Mais', small:true,
+  mais:{label:'Mais', sin:'einem Maiskorn', plu:'Maiskörnern', small:true,
     svg:'<svg viewBox="0 0 40 40"><path d="M20 5 Q32 10 30 24 Q28 34 20 34 Q12 34 10 24 Q8 10 20 5Z" fill="#FFC928" stroke="#DD9500" stroke-width="2.5"/><ellipse cx="16" cy="15" rx="3" ry="4" fill="#FFE27A"/></svg>'}
 };
 const POOL = ['salami','pilz','olive','paprika','ananas','mais'];
@@ -282,8 +312,11 @@ const HINT = {
   dough:{icon:'🥖', text:'Roll den Teig aus!', say:'Erst der Teig!'},
   sauce:{icon:'🍅', text:'Mal die Soße auf!', say:'Jetzt die Soße!'},
   cheese:{icon:'🧀', text:'Streu den Käse drauf!', say:'Jetzt der Käse!'},
-  build:{icon:'🧑‍🍳', text:'Jetzt belegen!', say:null}
+  build:{icon:'🧑‍🍳', text:'Jetzt belegen!', say:'Jetzt belegen!'},
+  baking:{icon:'🔥', text:'Tipp, wenn es grün ist!', say:'Tipp bei Grün!'},
+  baked:{icon:'🛎️', text:'Servieren!', say:'Jetzt servieren!'}
 };
+const IDLE_MS = 12000;       // ohne Aktion: Tipp wiederholen
 const CHEESE_NEED = 45;      // Anzahl Käsefäden
 const RUBBLE = () => tone(560+Math.random()*220,.05,'triangle',.07);
 
@@ -294,7 +327,8 @@ const $ = id => document.getElementById(id);
 const SAVE_KEY = 'pizzeria-spielstand';
 function loadGame(){
   try{ const d = JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
-    S.coins = d.coins||0; S.stars = d.stars||0; S.served = d.served||0; }catch(e){}
+    const n = v => Math.max(0, Math.floor(Number(v))||0);
+    S.coins = n(d.coins); S.stars = n(d.stars); S.served = n(d.served); }catch(e){}
 }
 function saveGame(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({coins:S.coins, stars:S.stars, served:S.served})); }catch(e){}
@@ -304,6 +338,15 @@ const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 
 /* ---------- Ton ---------- */
+const MUTE_KEY = 'pizzeria-stumm';
+let muted = false;
+try{ muted = localStorage.getItem(MUTE_KEY)==='1'; }catch(e){}
+function setMuted(m){
+  muted = m;
+  $('mute').textContent = m ? '🔇' : '🔊';
+  try{ localStorage.setItem(MUTE_KEY, m ? '1' : '0'); }catch(e){}
+  if(m && 'speechSynthesis' in window){ sayQueue = []; currentUtter = null; speechSynthesis.cancel(); } // echter Bruch: Ton aus
+}
 let AC = null;
 function ac(){
   if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
@@ -311,6 +354,7 @@ function ac(){
   return AC;
 }
 function tone(f, d=0.12, type='sine', vol=0.18, delay=0, slide=0){
+  if(muted) return;
   const a = ac(); if(!a) return;
   const t = a.currentTime + delay;
   const o = a.createOscillator(), g = a.createGain();
@@ -346,6 +390,7 @@ if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = 
 /* Ansagen laufen als Warteschlange komplett durch, nichts wird abgebrochen. */
 let sayQueue = [];
 let currentUtter = null;
+let sayWatchdog = null;
 function isSpeaking(){
   return sayQueue.length > 0 || (currentUtter !== null);
 }
@@ -356,11 +401,20 @@ function speakNext(){
   currentUtter = u;
   u.lang = 'de-DE'; if(voice) u.voice = voice;
   u.rate = 1; u.pitch = 1.15;
-  u.onend = u.onerror = () => { sayQueue.shift(); speakNext(); };
+  // Nur die aktuelle Ansage darf die Schlange weiterschieben – verspätete onend-Events alter Ansagen nicht
+  const finish = () => {
+    if(currentUtter !== u) return;
+    clearTimeout(sayWatchdog);
+    sayQueue.shift(); speakNext();
+  };
+  u.onend = u.onerror = finish;
+  // Android-TTS meldet onend nicht zuverlässig: nach geschätzter Dauer + Reserve trotzdem weiter
+  clearTimeout(sayWatchdog);
+  sayWatchdog = setTimeout(finish, Math.min(12000, 1500 + text.length*90));
   speechSynthesis.speak(u);
 }
 function say(text){
-  if(!('speechSynthesis' in window) || !text) return;
+  if(!('speechSynthesis' in window) || !text || muted) return;
   // Selbstheilung: hängt die Schlange, obwohl nichts gesprochen wird (z. B. Chrome-Bug bei Hintergrund-Tabs), neu starten
   if(sayQueue.length && !speechSynthesis.speaking && !speechSynthesis.pending){
     sayQueue = []; currentUtter = null;
@@ -377,16 +431,19 @@ function orderSentence(o){
 }
 
 /* ---------- Schwierigkeit ---------- */
-const level = () => Math.min(3, Math.floor(S.served/3));
-const unlocked = () => POOL.slice(0, 3 + level());
+/* Stufe steigt alle 3 richtigen Pizzen (Sterne), nicht alle 3 servierten */
+const level = () => Math.min(5, Math.floor(S.stars/3));
+const unlocked = () => POOL.slice(0, 3 + Math.min(3, level()));
 function makeOrder(){
   const L = level();
-  const nTypes = [1, rnd(1,2), 2, rnd(2,3)][L];
-  const maxN = [3,3,4,5][L];
+  const nTypes = [1, rnd(1,2), 2, rnd(2,3), 3, rnd(3,4)][L];
+  const maxN = [3,3,4,5,5,4][L];
   const o = {};
   shuffle(unlocked()).slice(0,nTypes).forEach(t => o[t] = rnd(1,maxN));
   return o;
 }
+
+const board = document.querySelector('.board');
 
 /* ---------- Regal aufbauen ---------- */
 const BTN = {};
@@ -421,14 +478,36 @@ function update(){
   set('sauce', ph!=='sauce', ph==='sauce');
   set('cheese', ph!=='cheese', ph==='cheese');
   const un = unlocked();
+  // Nächster Belag, von dem noch etwas fehlt – der leuchtet, solange er nicht schon gewählt ist
+  const got = counts(); let next = null;
+  if(b && S.cheese && S.order) for(const t of Object.keys(S.order)){ if((got[t]||0) < S.order[t]){ next = t; break; } }
   POOL.forEach(t => {
     BTN['t_'+t].classList.toggle('hide', !un.includes(t));
-    set('t_'+t, !b || !S.cheese, false, S.sel===t);
+    set('t_'+t, !b || !S.cheese, next===t && S.sel!==t, S.sel===t);
   });
   set('undo', !b || S.pieces.length===0);
-  set('bake', !b || !S.cheese, b && S.cheese && S.pieces.length>0);
+  set('bake', !b || !S.cheese || S.pieces.length===0, b && S.cheese && next===null && S.pieces.length>0);
   set('serve', S.phase!=='baked', S.phase==='baked');
+  armIdle();
 }
+
+/* ---------- Idle-Tipp: nach 12 s ohne Aktion Hinweis wiederholen ---------- */
+let idleT = null;
+function armIdle(){
+  clearTimeout(idleT);
+  if(!HINT[S.phase] || S.phase==='baking') return;
+  idleT = setTimeout(idleHint, IDLE_MS);
+}
+function idleHint(){
+  if(isSpeaking()){ idleT = setTimeout(idleHint, 1500); return; }
+  const h = HINT[S.phase]; if(!h) return;
+  showToast(h.icon, h.text); say(h.say);
+  const p = document.querySelector('.tbtn.pulse');
+  if(p) wiggle(p);
+  if(['dough','sauce','cheese'].includes(S.phase)) wiggle(board);
+  armIdle();
+}
+document.addEventListener('pointerdown', () => armIdle());
 
 function wiggle(el){ el.classList.remove('wig'); void el.offsetWidth; el.classList.add('wig'); }
 function nudge(){
@@ -477,7 +556,6 @@ function addPiece(t, x, y){
 }
 
 /* ---------- Haptische Schritte: Teig / Soße / Käse ---------- */
-const board = document.querySelector('.board');
 let P = null;                 // aktiver Pointer
 let cnv = null, cctx = null;  // Male-Canvas für die Soße
 let lastRollSfx = 0;
@@ -645,6 +723,21 @@ function renderOrder(){
   });
 }
 function bubbleText(txt){ $('order').innerHTML = `<div class="say">${txt}</div>`; }
+/* Bestellung neben dem Gelieferten: fehlende Stücke blass, zu viele durchgestrichen */
+function renderDiff(got){
+  const box = $('order'); box.innerHTML = '';
+  const keys = [...new Set([...Object.keys(S.order), ...Object.keys(got)])];
+  keys.forEach(t => {
+    const need = S.order[t]||0, have = got[t]||0;
+    const row = document.createElement('div'); row.className = 'orow';
+    for(let i=0;i<Math.max(need,have);i++){
+      const s = document.createElement('span');
+      s.className = 'oi' + (i>=have ? ' miss' : '') + (i>=need ? ' extra' : '');
+      s.innerHTML = TOPS[t].svg; row.appendChild(s);
+    }
+    box.appendChild(row);
+  });
+}
 
 /* ---------- Ablauf ---------- */
 function resetPizza(){
@@ -683,7 +776,8 @@ function newCustomer(){
 
 /* ---------- Backen mit Timing-Spiel ---------- */
 let ovenStop = null;
-const GREEN_A = .38, GREEN_B = .64;   // grüner Bereich der Backleiste
+const GREEN_A = .36, GREEN_B = .64;   // grüner Bereich der Backleiste (deckt sich mit dem Farbverlauf)
+const OVEN_WARMUP = 900;              // Zeiger wartet kurz, damit die Ansage „Tipp bei Grün“ ankommt
 
 function bake(){
   S.phase = 'baking'; S.sel = null; update();
@@ -691,18 +785,22 @@ function bake(){
   const needle = $('needle');
   needle.style.left = '0%';
   $('ovenbar').classList.add('on');
-  const t0 = performance.now(), DUR = 3200;   // ein Sweep, ~3 Sekunden
-  let curP = 0, lastTick = 0;
+  showToast(HINT.baking.icon, HINT.baking.text); say(HINT.baking.say);
+  const DUR = 3200;   // ein Sweep, ~3 Sekunden
+  let t0 = 0, curP = 0, lastTick = 0;
   const frame = now => {
     if(!ovenStop) return;
+    if(!t0) t0 = now;
     curP = Math.min(1, (now-t0)/DUR);
     needle.style.left = (curP*100)+'%';
     if(now-lastTick > 240){ tone(380+curP*640,.05,'triangle',.05); lastTick = now; }
     if(curP >= 1) ovenResult(1);              // zu lange gewartet
     else requestAnimationFrame(frame);
   };
-  ovenStop = () => ovenResult(curP);
-  requestAnimationFrame(frame);
+  setTimeout(() => {
+    ovenStop = () => ovenResult(curP);
+    requestAnimationFrame(frame);
+  }, OVEN_WARMUP);
 }
 
 function ovenResult(p){
@@ -756,7 +854,7 @@ function serve(){
       bumpChip('starChip');
     } else {
       S.coins += 1;
-      bubbleText('Danke! Fast richtig 🙂');
+      renderDiff(got);
       say('Fast richtig!');
       SFX.soft(); setTimeout(SFX.coin, 450);
       burst(c, ['🙂','✨']);
@@ -773,7 +871,7 @@ function serve(){
 
   setTimeout(() => {
     const after = level();
-    if(after > before){
+    if(after > before && after <= 3){
       const t = POOL[2+after];
       showToast(TOPS[t].svg, 'Neu: ' + TOPS[t].label + '!');
       say('Neu: ' + TOPS[t].label + '!');
@@ -804,13 +902,18 @@ function bumpChip(id){ const el=$(id); el.classList.remove('bump'); void el.offs
 let toastT;
 function showToast(icon, text){
   $('toastIcon').innerHTML = icon; $('toastText').textContent = text;
+  // Hochformat: über dem Brett (dort ist Platz), statt über Kunde oder Sprechblase
+  const portrait = matchMedia('(orientation:portrait)').matches;
+  $('toast').style.top = portrait ? (document.querySelector('.station').getBoundingClientRect().top + 6) + 'px' : '';
   $('toast').classList.add('show');
   clearTimeout(toastT); toastT = setTimeout(() => $('toast').classList.remove('show'), 2000);
 }
 
 /* ---------- Sonstiges ---------- */
 $('speak').addEventListener('click', () => { if(S.order && S.phase!=='serving') say(orderSentence(S.order)); });
-$('customer').addEventListener('click', () => { if(S.order && ['build','baking','baked'].includes(S.phase)) say(orderSentence(S.order)); });
+$('customer').addEventListener('click', () => { if(S.order && S.phase!=='serving') say(orderSentence(S.order)); });
+$('mute').addEventListener('click', () => { ac(); setMuted(!muted); if(!muted) SFX.click(); });
+setMuted(muted);
 $('fs').addEventListener('click', toggleFs);
 function toggleFs(){
   const d = document;
@@ -837,6 +940,9 @@ $('starChip').addEventListener('pointerdown', () => { resetT = setTimeout(() => 
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(()=>{}));
+  // Neue Version aktiviert, Spiel noch nicht gestartet: sofort neu laden statt erst beim nächsten Start
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if(hadController && $('start')) location.reload(); });
 }
 </script>
 </body>
