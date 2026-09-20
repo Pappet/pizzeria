@@ -147,16 +147,17 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
 
 /* Regal mit Knöpfen */
 .tray{flex:none;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;
-  padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
   background:linear-gradient(#A56A3B,#83532C);border-top:8px solid #C98B52;position:relative;z-index:3}
 .sep{width:4px;align-self:stretch;margin:6px 4px;border-radius:2px;background:rgba(0,0,0,.18)}
-.tbtn{width:clamp(72px,8.3vw,104px);aspect-ratio:1;border-radius:22px;border:none;background:#FFF8EC;
+/* Breite so gerechnet, dass alle 11 Knöpfe (+2 Trenner) in eine Zeile passen */
+.tbtn{width:clamp(56px,calc((100vw - 168px)/11),104px);aspect-ratio:1;border-radius:22px;border:none;background:#FFF8EC;
   box-shadow:0 6px 0 #5E3A1C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   font-family:inherit;color:var(--ink);cursor:pointer;padding:6px;transition:transform .12s,opacity .2s,background .2s}
 .tbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #5E3A1C}
 .tbtn:focus-visible{outline:4px dashed #fff;outline-offset:3px}
-.tbtn .ic{width:54%;height:54%;display:grid;place-items:center;font-size:clamp(30px,4vw,44px);line-height:1}
-.tbtn .lb{font-size:clamp(13px,1.5vw,17px);font-weight:600}
+.tbtn .ic{width:54%;height:54%;display:grid;place-items:center;font-size:clamp(22px,4vw,44px);line-height:1}
+.tbtn .lb{font-size:clamp(9px,calc((100vw - 168px)/73),17px);font-weight:600}
 .tbtn.sel{background:#FFEFA8;outline:5px solid var(--basil);transform:translateY(-6px)}
 .tbtn.dis{opacity:.4}
 .tbtn.done{background:#D8F0D4}
@@ -200,7 +201,8 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
   .counter{display:none}
   #toast{font-size:22px;padding:8px 14px;gap:8px;max-width:36vw}
   #toast .ti{width:36px;height:36px}
-  .tbtn{width:clamp(72px,11vw,110px)}
+  .tray{gap:6px}
+  .tbtn{width:clamp(56px,calc((100vw - 144px)/11),110px)}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
