@@ -194,9 +194,12 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax
   main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .shop{flex-direction:row;align-items:center;justify-content:center;gap:24px;padding-top:6px}
   .customer{font-size:min(14vh,24vw);margin:0}
-  .bubble{margin:0}
+  .bubble{margin:0;flex-shrink:1}
+  .oi{width:clamp(28px,7vw,54px);height:clamp(28px,7vw,54px)}
   .bubble::after{bottom:auto;left:auto;top:50%;right:-15px;transform:translateY(-50%) rotate(-45deg)}
   .counter{display:none}
+  #toast{font-size:22px;padding:8px 14px;gap:8px;max-width:36vw}
+  #toast .ti{width:36px;height:36px}
   .tbtn{width:clamp(72px,11vw,110px)}
 }
 @media (prefers-reduced-motion:reduce){
