@@ -47,5 +47,11 @@ URL in Chrome öffnen → Menü ⋮ → „App installieren“ / „Zum Startbil
 Nach jeder Änderung `VERSION` in `sw.js` hochzählen. Liegt das Spiel beim
 Update noch auf dem Startbildschirm, lädt es sich selbst neu.
 
+## Für Eltern
+Das Spiel schweigt komplett, solange es nicht sichtbar ist (Sichtbarkeits-Wechsel):
+keine Ansagen, keine Töne, keine Tipp-Timer und kein Vibrieren — so können auf dem
+Tablet mehrere Spiel-Apps nebeneinander laufen, ohne dass ein Spiel in das andere
+hineinquatscht.
+
 ## Spielstand zurücksetzen
 Stern-Anzeige oben rechts 3 Sekunden gedrückt halten.

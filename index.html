@@ -345,7 +345,14 @@ function setMuted(m){
   muted = m;
   $('mute').textContent = m ? '🔇' : '🔊';
   try{ localStorage.setItem(MUTE_KEY, m ? '1' : '0'); }catch(e){}
-  if(m && 'speechSynthesis' in window){ sayQueue = []; currentUtter = null; speechSynthesis.cancel(); } // echter Bruch: Ton aus
+  if(m && 'speechSynthesis' in window) stopSpeech(); // echter Bruch: Ton aus
+}
+/* Sprache komplett aus: Schlange leeren und laufende Ansage sofort stoppen.
+   Wird vom Mute-Knopf, vom visibilitychange- und vom pagehide-Handler benutzt. */
+function stopSpeech(){
+  sayQueue = []; currentUtter = null;
+  clearTimeout(sayWatchdog);   // hängender Watchdog darf die leere Schlange nicht weiterschieben
+  if('speechSynthesis' in window) speechSynthesis.cancel();
 }
 let AC = null;
 function ac(){
@@ -354,7 +361,9 @@ function ac(){
   return AC;
 }
 function tone(f, d=0.12, type='sine', vol=0.18, delay=0, slide=0){
-  if(muted) return;
+  // 🔇 und Hintergrund: gar nichts von sich geben — das Tablet teilt sich
+  // Audio/TTS mit allen anderen Apps, im Hintergrund schweigt das Spiel.
+  if(muted || document.hidden) return;
   const a = ac(); if(!a) return;
   const t = a.currentTime + delay;
   const o = a.createOscillator(), g = a.createGain();
@@ -395,6 +404,8 @@ function isSpeaking(){
   return sayQueue.length > 0 || (currentUtter !== null);
 }
 function speakNext(){
+  // Hintergrund: nichts sprechen, nichts anstehen lassen (Sichtbarkeits-Gate)
+  if(document.hidden){ sayQueue = []; currentUtter = null; return; }
   const text = sayQueue[0];
   if(text === undefined){ currentUtter = null; return; }
   const u = new SpeechSynthesisUtterance(text);
@@ -414,7 +425,7 @@ function speakNext(){
   speechSynthesis.speak(u);
 }
 function say(text){
-  if(!('speechSynthesis' in window) || !text || muted) return;
+  if(!('speechSynthesis' in window) || !text || muted || document.hidden) return;   // Hintergrund: schweigen
   // Selbstheilung: hängt die Schlange, obwohl nichts gesprochen wird (z. B. Chrome-Bug bei Hintergrund-Tabs), neu starten
   if(sayQueue.length && !speechSynthesis.speaking && !speechSynthesis.pending){
     sayQueue = []; currentUtter = null;
@@ -495,12 +506,15 @@ function update(){
 let idleT = null;
 function armIdle(){
   clearTimeout(idleT);
-  if(!HINT[S.phase] || S.phase==='baking') return;
+  // Hintergrund: kein Tipp-Timer; sonst hängt er beim Sichtbarwerden sofort los
+  if(document.hidden || !HINT[S.phase] || S.phase==='baking') return;
   idleT = setTimeout(idleHint, IDLE_MS);
 }
 function idleHint(){
-  if(isSpeaking()){ idleT = setTimeout(idleHint, 1500); return; }
+  // defensiv: Timer-Rückrufe geben nichts von sich, wenn die Seite unsichtbar ist
+  if(document.hidden) return;
   const h = HINT[S.phase]; if(!h) return;
+  if(isSpeaking()){ idleT = setTimeout(idleHint, 1500); return; }
   showToast(h.icon, h.text); say(h.say);
   const p = document.querySelector('.tbtn.pulse');
   if(p) wiggle(p);
@@ -937,6 +951,23 @@ $('starChip').addEventListener('pointerdown', () => { resetT = setTimeout(() => 
   if(confirm('Spielstand wirklich zurücksetzen?')){ localStorage.removeItem(SAVE_KEY); location.reload(); }
 }, 3000); });
 ['pointerup','pointerleave','pointercancel'].forEach(ev => $('starChip').addEventListener(ev, () => clearTimeout(resetT)));
+
+/* Hintergrund (mehrere Apps offen): komplett schweigen. Die Sprachausgabe des
+   Systems wird von ALLEN Apps geteilt — ohne das quatscht hier etwas in die
+   gerade geöffnete App hinein und umgekehrt. Auch der Tipp-Timer stoppt im
+   Hintergrund, und suspend() tötet schon geplante Töne des AudioContext. */
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden){
+    stopSpeech();                                    // laufende Ansage sofort aus
+    clearTimeout(idleT);                             // kein Tipp-Timer im Hintergrund
+    if(AC && AC.state === 'running') AC.suspend().catch(()=>{});
+  }else{
+    if(AC && AC.state === 'suspended') AC.resume().catch(()=>{});
+    if(!$('start')) armIdle();                       // Tipps nur auf echter Spielfläche, nicht unter dem Start-Overlay
+  }
+});
+// iOS/Safari feuert visibilitychange beim App-Wechsel nicht immer: pagehide macht das Gleiche
+window.addEventListener('pagehide', () => { stopSpeech(); clearTimeout(idleT); });
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(()=>{}));

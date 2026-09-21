@@ -1,5 +1,5 @@
 // Nach jeder Änderung hochzählen, sonst liefert der Service Worker die alte Version aus.
-const VERSION = 'v12';
+const VERSION = 'v13';
 const CACHE = `pizzeria-${VERSION}`;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './fonts/fredoka-latin.woff2',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png',
